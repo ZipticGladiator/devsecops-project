@@ -1,0 +1,36 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  security-scan:
+    name: Security Scans (Checkov & Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # (Phase 1.2) IaC Static Analysis with Checkov
+      - name: Run Checkov to scan Terraform
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ./
+          framework: terraform
+          soft_fail: true # Set to true initially to prevent blocking the build on warnings
+
+      # (Phase 3.1) Image Scanning with Trivy
+      # Since we don't have a Dockerfile built yet, we simulate testing a vulnerable image
+      # Once you have an application, change image-ref to your ECR image (e.g., my-app:latest)
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'nginx:1.18' # Sample image to test Trivy. Replace with your actual app image payload.
+          format: 'table'
+          exit-code: '1' # Will fail the build if CRITICAL/HIGH are found (which nginx 1.18 has)
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
