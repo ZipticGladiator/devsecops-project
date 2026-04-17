@@ -36,6 +36,17 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
+  # Phase 2.1: Identity and Access Management and Security
+  enable_irsa = true
+
+  cluster_endpoint_private_access = true
+  cluster_endpoint_public_access  = true # Keep true for testing, restrict in prod
+
+  create_kms_key = true
+  cluster_encryption_config = {
+    resources = ["secrets"]
+  }
+
   eks_managed_node_groups = {
     green = {
       min_size     = 1
